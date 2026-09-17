@@ -118,7 +118,7 @@ def git_head_sha(project_path: Path) -> Optional[str]:
     return None
 
 
-async def _run_claude_headless(
+async def run_claude_headless(
     *,
     ticket_id: int,
     cwd: Path,
@@ -134,9 +134,15 @@ async def _run_claude_headless(
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"{log_subdir}-{run_id}.jsonl"
 
+    # The prompt (a positional argument) must come before any variadic flag such
+    # as --disallowedTools/--allowedTools/--add-dir: those consume every following
+    # non-flag token, and would otherwise swallow the prompt itself, leaving none
+    # for `-p` ("Input must be provided either through stdin or as a prompt
+    # argument").
     cmd = [
         CLAUDE_BIN,
         "-p",
+        prompt,
         *session_flag,
         "--output-format",
         "stream-json",
@@ -151,7 +157,6 @@ async def _run_claude_headless(
         cmd += ["--append-system-prompt", append_system_prompt]
     if disallowed_tools:
         cmd += ["--disallowedTools", disallowed_tools]
-    cmd.append(prompt)
 
     broadcaster = ticket_log_broadcaster(ticket_id)
 
@@ -314,7 +319,7 @@ async def execute_ticket_start(project_id: int, ticket_id: int) -> None:
         session.add(ticket)
         session.commit()
 
-    run = await _run_claude_headless(
+    run = await run_claude_headless(
         ticket_id=ticket_id,
         cwd=project_path,
         prompt=prompt,
@@ -333,7 +338,7 @@ async def execute_ticket_resume(ticket_id: int, answer_text: str) -> None:
         session_id = ticket.session_id
         project_path = Path(project.path)
 
-    run = await _run_claude_headless(
+    run = await run_claude_headless(
         ticket_id=ticket_id,
         cwd=project_path,
         prompt=answer_text,
