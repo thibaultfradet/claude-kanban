@@ -1,0 +1,17 @@
+<div class="columns">
+  {% for status in statuses %}
+  <div class="column">
+    <h2>{{ status_labels[status] }} <span class="count">{{ tickets_by_status[status]|length }}</span></h2>
+    <ul class="card-list" data-status="{{ status.value }}">
+      {% for ticket in tickets_by_status[status] %}
+      <li class="card" data-id="{{ ticket.id }}">
+        <a href="/tickets/{{ ticket.id }}">
+          <div class="card-project">{{ project_names.get(ticket.project_id, "?") }}</div>
+          <div class="card-title">{{ ticket.title }}</div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
