@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Claude Kanban</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <link rel="stylesheet" href="/static/app.css" />
@@ -11,10 +13,24 @@
 <body>
   <header>
     <h1>Claude Kanban</h1>
+    <span class="subtitle">tableau local — {{ request.url.hostname }}:{{ request.url.port }}</span>
   </header>
+
   <div id="board" hx-get="/fragments/board" hx-trigger="load, refresh" hx-swap="innerHTML">
     Chargement…
   </div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Détail du ticket">
+      <div class="modal-close-bar">
+        <button class="btn-icon" id="modal-close-btn" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -94,8 +94,7 @@ async def board_fragment(request: Request):
     )
 
 
-@app.get("/tickets/{ticket_id}")
-async def ticket_detail_page(request: Request, ticket_id: int):
+def _ticket_context(ticket_id: int) -> dict:
     with Session(engine) as session:
         ticket = session.get(Ticket, ticket_id)
         if ticket is None:
@@ -107,16 +106,26 @@ async def ticket_detail_page(request: Request, ticket_id: int):
             .order_by(TicketEntry.created_at)
         ).all()
 
-    return templates.TemplateResponse(
-        "ticket_detail.html",
-        {
-            "request": request,
-            "ticket": ticket,
-            "project": project,
-            "entries": entries,
-            "status_labels": STATUS_LABELS,
-        },
-    )
+    return {
+        "ticket": ticket,
+        "project": project,
+        "entries": entries,
+        "status_labels": STATUS_LABELS,
+    }
+
+
+@app.get("/tickets/{ticket_id}")
+async def ticket_detail_page(request: Request, ticket_id: int):
+    context = _ticket_context(ticket_id)
+    context["request"] = request
+    return templates.TemplateResponse("ticket_detail.html", context)
+
+
+@app.get("/fragments/tickets/{ticket_id}")
+async def ticket_detail_fragment(request: Request, ticket_id: int):
+    context = _ticket_context(ticket_id)
+    context["request"] = request
+    return templates.TemplateResponse("_ticket_fragment.html", context)
 
 
 # ---------------------------------------------------------------------------

@@ -1,14 +1,17 @@
 <div class="columns">
   {% for status in statuses %}
   <div class="column">
-    <h2>{{ status_labels[status] }} <span class="count">{{ tickets_by_status[status]|length }}</span></h2>
-    <ul class="card-list" data-status="{{ status.value }}">
+    <div class="column-header">
+      <span class="status-dot" style="background: var(--status-{{ status.value }})"></span>
+      <span class="column-title">{{ status_labels[status] }}</span>
+      <span class="count">{{ tickets_by_status[status]|length }}</span>
+    </div>
+    <ul class="card-list{{ ' empty' if not tickets_by_status[status] else '' }}" data-status="{{ status.value }}">
       {% for ticket in tickets_by_status[status] %}
-      <li class="card" data-id="{{ ticket.id }}">
-        <a href="/tickets/{{ ticket.id }}">
-          <div class="card-project">{{ project_names.get(ticket.project_id, "?") }}</div>
-          <div class="card-title">{{ ticket.title }}</div>
-        </a>
+      <li class="card" data-id="{{ ticket.id }}" style="--card-accent: var(--status-{{ status.value }})"
+          role="button" tabindex="0" aria-haspopup="dialog">
+        <div class="card-project">{{ project_names.get(ticket.project_id, "?") }}</div>
+        <div class="card-title">{{ ticket.title }}</div>
       </li>
       {% endfor %}
     </ul>

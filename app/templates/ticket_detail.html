@@ -4,61 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>#{{ ticket.id }} — {{ ticket.title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/app.css" />
 </head>
 <body>
-  <a href="/">← Retour au board</a>
-  <h1>{{ ticket.title }}</h1>
-  <p><strong>Projet :</strong> {{ project.name }} <code>{{ project.path }}</code></p>
-  <p><strong>Statut :</strong> <span class="badge status-{{ ticket.status.value }}">{{ status_labels[ticket.status] }}</span></p>
+  <header>
+    <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
+    <h1>Claude Kanban</h1>
+  </header>
 
-  {% if ticket.status.value == "standby" %}
-  <form id="answer-form">
-    <label for="answer-message">Ta réponse à l'agent :</label><br />
-    <textarea id="answer-message" name="message" rows="4" cols="80" required></textarea><br />
-    <button type="submit">Envoyer et reprendre</button>
-  </form>
-  {% endif %}
-
-  {% if ticket.status.value == "a_valider" %}
-  <p class="hint">
-    Pour rejeter ce ticket après test : ouvre une nouvelle session Claude Desktop dans
-    <code>{{ project.path }}</code> et explique ce qui ne va pas — le ticket repassera en
-    "à faire" avec tout l'historique conservé. Sinon, glisse la carte vers "À committer" sur le board.
-  </p>
-  {% endif %}
-
-  {% if ticket.status.value == "a_committer" %}
-    {% if ticket.error_message %}
-    <p class="error">{{ ticket.error_message }}</p>
-    {% else %}
-    <div class="commit-info">
-      <h3>Commit(s)</h3>
-      <pre>{{ ticket.commit_message or "En cours…" }}</pre>
-      {% if ticket.commit_message %}
-      <button id="push-btn">Valider et pousser</button>
-      {% endif %}
+  <div class="modal" style="width: min(720px, 100%); margin: 0 auto;">
+    <div class="modal-body" style="padding-top: 20px;" id="standalone-ticket">
+      {% include "_ticket_fragment.html" %}
     </div>
-    {% endif %}
-  {% endif %}
-
-  <h2>Journal</h2>
-  <div class="journal">
-    {% for entry in entries %}
-    <div class="entry entry-{{ entry.kind.value }}">
-      <div class="entry-meta">{{ entry.kind.value }} · {{ entry.author.value }} · {{ entry.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
-      <pre>{{ entry.content }}</pre>
-    </div>
-    {% endfor %}
   </div>
 
-  <h2>Logs live</h2>
-  <pre id="live-logs" class="logs"></pre>
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script src="/static/app.js"></script>
   <script>
-    window.TICKET_ID = {{ ticket.id }};
+    window.KanbanTicket.bind(document.getElementById("standalone-ticket"), {{ ticket.id }});
   </script>
-  <script src="/static/ticket.js"></script>
 </body>
 </html>
