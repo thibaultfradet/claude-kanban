@@ -38,6 +38,14 @@ EnterPlanMode ou ExitPlanMode (ces outils sont désactivés pour cette session).
 Si tu as besoin d'une clarification pour continuer, arrête-toi simplement en \
 terminant ta réponse par le bloc structuré décrit plus bas avec status="question".
 
+Ce run est strictement single-shot : il n'y a AUCUN tour suivant. N'utilise jamais \
+une commande en arrière-plan (run_in_background, `&`, nohup, un outil Monitor...) en \
+comptant "attendre la notification" avant de continuer — cette notification \
+n'arrivera jamais, ta réponse finale serait alors illisible et le ticket resterait \
+bloqué. Si tu dois attendre qu'un process se termine (ex: tester un serveur), fais-le \
+de façon synchrone (commande au premier plan avec timeout, ou boucle de polling qui \
+se termine avant ta réponse finale), jamais en arrière-plan.
+
 Règles de travail :
 - Travaille sur la branche git courante du dépôt. Ne crée jamais de nouvelle branche.
 - Commit fréquemment, par petites étapes logiques, au fur et à mesure de ton \
