@@ -26,6 +26,11 @@ DEFAULT_TIMEOUT_SECONDS = int(os.environ.get("KANBAN_TICKET_TIMEOUT", "1800"))
 # These tools assume a human is present to answer; none is, in a headless run.
 DISALLOWED_TOOLS = "AskUserQuestion,EnterPlanMode,ExitPlanMode"
 
+# A single stream-json line from Claude (e.g. a long tool result) can exceed
+# asyncio's default StreamReader limit (64 KiB), which raises "Separator is not
+# found, and chunk exceed the limit" and aborts the whole run. Give it headroom.
+STREAM_READ_LIMIT = 10 * 1024 * 1024
+
 KANBAN_SYSTEM_PROMPT = """\
 Tu exécutes un ticket de façon totalement autonome, en mode headless (--print). \
 Personne ne répondra pendant ce run : n'utilise jamais AskUserQuestion, \
@@ -165,6 +170,7 @@ async def run_claude_headless(
         cwd=str(cwd),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        limit=STREAM_READ_LIMIT,
     )
 
     state = {
