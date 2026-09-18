@@ -234,6 +234,16 @@ async def run_claude_headless(
         with contextlib.suppress(ProcessLookupError):
             proc.kill()
         await proc.wait()
+    except Exception:
+        # Any other failure while reading the streams (e.g. a single stdout line
+        # exceeding STREAM_READ_LIMIT) must not leave the child `claude` process
+        # running untracked: the caller records a launch failure and requeues the
+        # ticket, but nothing would ever reap this process otherwise.
+        with contextlib.suppress(ProcessLookupError):
+            proc.kill()
+        with contextlib.suppress(Exception):
+            await proc.wait()
+        raise
 
     return RunResult(
         session_id=state["session_id"],
