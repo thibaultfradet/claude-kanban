@@ -231,6 +231,43 @@ async def run_claude_headless(
     )
 
 
+async def _record_launch_failure(ticket_id: int, exc: Exception) -> None:
+    """Claude never even got to run (e.g. the project directory doesn't exist).
+
+    Unlike a normal error/timeout from `_apply_result`, no session was created, so
+    resuming with `--resume` would fail again. Send the ticket back to a_faire so
+    the scheduler retries it from scratch once the underlying issue is fixed.
+    """
+    from datetime import datetime
+
+    from . import events  # local import to avoid a cycle at module load time
+
+    with Session(engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        if ticket is None:
+            return
+        ticket.status = TicketStatus.a_faire
+        ticket.session_id = None
+        ticket.error_message = f"Échec du lancement de Claude : {exc}"
+        ticket.updated_at = datetime.utcnow()
+        session.add(ticket)
+        session.add(
+            TicketEntry(
+                ticket_id=ticket_id,
+                kind=EntryKind.error,
+                author=EntryAuthor.agent,
+                content=ticket.error_message,
+            )
+        )
+        session.commit()
+        new_status = ticket.status.value
+        project_id = ticket.project_id
+
+    await events.board_events.publish(
+        {"ticket_id": ticket_id, "project_id": project_id, "status": new_status}
+    )
+
+
 async def _apply_result(ticket_id: int, run: RunResult) -> None:
     from . import events  # local import to avoid a cycle at module load time
 
@@ -319,15 +356,19 @@ async def execute_ticket_start(project_id: int, ticket_id: int) -> None:
         session.add(ticket)
         session.commit()
 
-    run = await run_claude_headless(
-        ticket_id=ticket_id,
-        cwd=project_path,
-        prompt=prompt,
-        session_flag=["--session-id", new_session_id],
-        append_system_prompt=KANBAN_SYSTEM_PROMPT,
-        disallowed_tools=DISALLOWED_TOOLS,
-        log_subdir="start",
-    )
+    try:
+        run = await run_claude_headless(
+            ticket_id=ticket_id,
+            cwd=project_path,
+            prompt=prompt,
+            session_flag=["--session-id", new_session_id],
+            append_system_prompt=KANBAN_SYSTEM_PROMPT,
+            disallowed_tools=DISALLOWED_TOOLS,
+            log_subdir="start",
+        )
+    except Exception as exc:
+        await _record_launch_failure(ticket_id, exc)
+        return
     await _apply_result(ticket_id, run)
 
 
@@ -338,13 +379,17 @@ async def execute_ticket_resume(ticket_id: int, answer_text: str) -> None:
         session_id = ticket.session_id
         project_path = Path(project.path)
 
-    run = await run_claude_headless(
-        ticket_id=ticket_id,
-        cwd=project_path,
-        prompt=answer_text,
-        session_flag=["--resume", session_id],
-        append_system_prompt=KANBAN_SYSTEM_PROMPT,
-        disallowed_tools=DISALLOWED_TOOLS,
-        log_subdir="resume",
-    )
+    try:
+        run = await run_claude_headless(
+            ticket_id=ticket_id,
+            cwd=project_path,
+            prompt=answer_text,
+            session_flag=["--resume", session_id],
+            append_system_prompt=KANBAN_SYSTEM_PROMPT,
+            disallowed_tools=DISALLOWED_TOOLS,
+            log_subdir="resume",
+        )
+    except Exception as exc:
+        await _record_launch_failure(ticket_id, exc)
+        return
     await _apply_result(ticket_id, run)

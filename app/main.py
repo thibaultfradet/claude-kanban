@@ -50,6 +50,7 @@ _scheduler_task: Optional[asyncio.Task] = None
 async def lifespan(app: FastAPI):
     global _scheduler_task
     init_db()
+    await scheduler.recover_stale_tickets()
     _scheduler_task = asyncio.create_task(scheduler.scheduler_loop())
     yield
     if _scheduler_task:

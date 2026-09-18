@@ -39,17 +39,39 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
         project_path = Path(project.path)
         head_before = ticket.head_sha_at_start or runner.git_head_sha(project_path)
 
-    commit_skill_text = COMMIT_SKILL_PATH.read_text(encoding="utf-8")
-    prompt = commit_skill_text + HEADLESS_OVERRIDE_NOTE
+    try:
+        commit_skill_text = COMMIT_SKILL_PATH.read_text(encoding="utf-8")
+        prompt = commit_skill_text + HEADLESS_OVERRIDE_NOTE
 
-    run = await runner.run_claude_headless(
-        ticket_id=ticket_id,
-        cwd=project_path,
-        prompt=prompt,
-        session_flag=["--session-id", str(uuid.uuid4())],
-        disallowed_tools="AskUserQuestion,EnterPlanMode,ExitPlanMode",
-        log_subdir="commit",
-    )
+        run = await runner.run_claude_headless(
+            ticket_id=ticket_id,
+            cwd=project_path,
+            prompt=prompt,
+            session_flag=["--session-id", str(uuid.uuid4())],
+            disallowed_tools="AskUserQuestion,EnterPlanMode,ExitPlanMode",
+            log_subdir="commit",
+        )
+    except Exception as exc:
+        with Session(engine) as session:
+            ticket = session.get(Ticket, ticket_id)
+            ticket.error_message = f"Échec du lancement du commit automatique : {exc}"
+            ticket.updated_at = datetime.utcnow()
+            session.add(ticket)
+            session.add(
+                TicketEntry(
+                    ticket_id=ticket_id,
+                    kind=EntryKind.error,
+                    author=EntryAuthor.agent,
+                    content=ticket.error_message,
+                )
+            )
+            session.commit()
+            project_id_out = ticket.project_id
+            status_out = ticket.status.value
+        await events.board_events.publish(
+            {"ticket_id": ticket_id, "project_id": project_id_out, "status": status_out}
+        )
+        return
 
     head_after = runner.git_head_sha(project_path)
 
