@@ -4,7 +4,7 @@
 
 You write a ticket. A headless [Claude Code](https://docs.claude.com/en/docs/claude-code) agent picks it up and works on it in your project. You test the result and approve it before anything gets committed or pushed. It works across several projects at once, and everything runs on your own machine.
 
-<!-- Screenshot: add an image of the board here. -->
+![The Claude Kanban board](docs/board.png)
 
 ## How it works
 
