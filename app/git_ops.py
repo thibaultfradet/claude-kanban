@@ -13,6 +13,15 @@ from .db import engine
 from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, TicketStatus
 
 COMMIT_SKILL_PATH = Path.home() / ".claude" / "commands" / "commit.md"
+BUNDLED_COMMIT_SKILL_PATH = (
+    Path(__file__).resolve().parent.parent / "claude-commands" / "commit.md"
+)
+
+
+def _resolve_commit_skill_path() -> Path:
+    if COMMIT_SKILL_PATH.exists():
+        return COMMIT_SKILL_PATH
+    return BUNDLED_COMMIT_SKILL_PATH
 
 HEADLESS_OVERRIDE_NOTE = """
 
@@ -40,7 +49,7 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
         head_before = ticket.head_sha_at_start or runner.git_head_sha(project_path)
 
     try:
-        commit_skill_text = COMMIT_SKILL_PATH.read_text(encoding="utf-8")
+        commit_skill_text = _resolve_commit_skill_path().read_text(encoding="utf-8")
         prompt = commit_skill_text + HEADLESS_OVERRIDE_NOTE
 
         run = await runner.run_claude_headless(
