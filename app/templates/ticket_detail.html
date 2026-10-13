@@ -5,18 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>#{{ ticket.id }} — {{ ticket.title }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/app.css" />
 </head>
 <body>
-  <header>
-    <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
-    <h1>Claude Kanban</h1>
-  </header>
+  <div class="window">
+    <div class="window-bar">
+      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="address">CLAUDE-KANBAN · {{ request.url.hostname }}:{{ request.url.port }}</div>
+    </div>
+    <div class="window-content">
+      <div class="page-header">
+        <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
+        <div>
+          <div class="eyebrow">Ticket #{{ ticket.id }}</div>
+          <h1>Claude <em>Kanban</em></h1>
+        </div>
+      </div>
 
-  <div class="modal" style="width: min(720px, 100%); margin: 0 auto;">
-    <div class="modal-body" style="padding-top: 20px;" id="standalone-ticket">
-      {% include "_ticket_fragment.html" %}
+      <div class="modal" style="width: min(720px, 100%);">
+        <div class="modal-body" style="padding: 0;" id="standalone-ticket">
+          {% include "_ticket_fragment.html" %}
+        </div>
+      </div>
     </div>
   </div>
 

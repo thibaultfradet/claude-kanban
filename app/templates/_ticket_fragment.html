@@ -1,6 +1,6 @@
 <div class="ticket-header">
   <h2 class="ticket-title">{{ ticket.title }}</h2>
-  <span class="badge" style="--badge-color: var(--status-{{ ticket.status.value }})">{{ status_labels[ticket.status] }}</span>
+  <span class="badge" style="--badge-ink: var(--status-{{ ticket.status.value }}-ink); --badge-bg: var(--status-{{ ticket.status.value }}-bg); --badge-border: var(--status-{{ ticket.status.value }}-border)">{{ status_labels[ticket.status] }}</span>
 </div>
 <p class="ticket-meta">{{ project.name }} · <code>{{ project.path }}</code></p>
 

@@ -5,19 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Claude Kanban</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <link rel="stylesheet" href="/static/app.css" />
 </head>
 <body>
-  <header>
-    <h1>Claude Kanban</h1>
-    <span class="subtitle">tableau local — {{ request.url.hostname }}:{{ request.url.port }}</span>
-  </header>
+  <div class="window">
+    <div class="window-bar">
+      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="address">CLAUDE-KANBAN · {{ request.url.hostname }}:{{ request.url.port }}</div>
+    </div>
+    <div class="window-content">
+      <div class="page-header">
+        <div>
+          <div class="eyebrow">Tableau local</div>
+          <h1>Claude <em>Kanban</em></h1>
+        </div>
+      </div>
 
-  <div id="board" hx-get="/fragments/board" hx-trigger="load, refresh" hx-swap="innerHTML">
-    Chargement…
+      <div id="board" hx-get="/fragments/board" hx-trigger="load, refresh" hx-swap="innerHTML">
+        Chargement…
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="modal-overlay">
