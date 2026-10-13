@@ -19,15 +19,20 @@
   {% for status in statuses %}
   {% set tickets = tickets_by_status[status] %}
   {% if status.value == "termine" %}
-    {% set shown = (tickets|sort(attribute="updated_at", reverse=True))[:12] %}
+    {% set shown = tickets|sort(attribute="updated_at", reverse=True) %}
   {% else %}
     {% set shown = tickets %}
   {% endif %}
-  <section class="column" style="--c: var(--status-{{ status.value }}); --c-soft: var(--status-{{ status.value }}-soft)">
+  <section class="column"{{ ' data-collapsible' if status.value == "termine" else '' }} style="--c: var(--status-{{ status.value }}); --c-soft: var(--status-{{ status.value }}-soft)">
     <header class="column-header">
       <span class="column-icon column-icon-{{ status.value }}" aria-hidden="true"></span>
       <h2 class="column-title" title="{{ status_labels[status] }}">{{ status_labels[status]|replace(" (question)", "") }}</h2>
       <span class="count">{{ tickets|length }}</span>
+      {% if status.value == "termine" %}
+      <button type="button" class="column-toggle" data-column-toggle aria-expanded="true" aria-label="Replier la colonne Terminé">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      {% endif %}
     </header>
     <ul class="card-list{{ ' empty' if not tickets else '' }}" data-status="{{ status.value }}">
       {% for ticket in shown %}
@@ -51,8 +56,8 @@
       </li>
       {% endfor %}
     </ul>
-    {% if tickets|length > shown|length %}
-    <div class="column-more">+ {{ tickets|length - shown|length }} plus anciens</div>
+    {% if status.value == "termine" and tickets|length > 3 %}
+    <button type="button" class="column-more" data-more-btn></button>
     {% endif %}
   </section>
   {% endfor %}

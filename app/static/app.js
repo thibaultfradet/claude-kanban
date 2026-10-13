@@ -174,6 +174,78 @@ window.KanbanTicket = (function () {
       });
   }
 
+  // Terminé column: show a few cards, reveal more on demand, or fold the column.
+  // State lives here (the board is re-rendered on every server event) and in localStorage.
+  var PAGE_SIZE = 10;
+  var DEFAULT_LIMIT = 3;
+  var doneState = { limit: DEFAULT_LIMIT, collapsed: false };
+  try {
+    var saved = JSON.parse(localStorage.getItem("kanban.termine") || "null");
+    if (saved) {
+      if (saved.limit >= DEFAULT_LIMIT) doneState.limit = saved.limit | 0;
+      doneState.collapsed = saved.collapsed === true;
+    }
+  } catch (err) {
+    /* storage unavailable or corrupt */
+  }
+
+  function saveDoneState() {
+    try {
+      localStorage.setItem("kanban.termine", JSON.stringify(doneState));
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function applyDoneState() {
+    var col = document.querySelector(".column[data-collapsible]");
+    if (!col) return;
+    var cards = col.querySelectorAll(".card-list .card");
+    var total = cards.length;
+    cards.forEach(function (card, i) {
+      card.classList.toggle("is-hidden", i >= doneState.limit);
+    });
+    col.classList.toggle("is-collapsed", doneState.collapsed);
+    var toggle = col.querySelector("[data-column-toggle]");
+    toggle.setAttribute("aria-expanded", String(!doneState.collapsed));
+    toggle.setAttribute(
+      "aria-label",
+      (doneState.collapsed ? "Déplier" : "Replier") + " la colonne Terminé"
+    );
+    var more = col.querySelector("[data-more-btn]");
+    if (!more) return;
+    var remaining = total - doneState.limit;
+    if (remaining > 0) {
+      more.textContent =
+        remaining > PAGE_SIZE
+          ? "Voir " + PAGE_SIZE + " de plus · " + remaining + " restants"
+          : "Voir les " + remaining + " derniers";
+    } else {
+      more.textContent = "Réduire";
+    }
+  }
+
+  document.getElementById("board").addEventListener("click", function (e) {
+    var toggle = e.target.closest("[data-column-toggle]");
+    var more = e.target.closest("[data-more-btn]");
+    if (!toggle && !more) return;
+    var col = e.target.closest(".column");
+    if (toggle) {
+      doneState.collapsed = !doneState.collapsed;
+    } else {
+      var total = col.querySelectorAll(".card-list .card").length;
+      if (doneState.limit >= total) {
+        doneState.limit = DEFAULT_LIMIT;
+        applyDoneState();
+        col.querySelector(".column-header").scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } else {
+        doneState.limit += PAGE_SIZE;
+      }
+    }
+    saveDoneState();
+    applyDoneState();
+  });
+
   function bindCardClicks() {
     document.querySelectorAll(".card[data-id]").forEach(function (card) {
       card.addEventListener("click", function () {
@@ -239,6 +311,7 @@ window.KanbanTicket = (function () {
   document.body.addEventListener("htmx:afterSwap", function (evt) {
     if (evt.detail.target && evt.detail.target.id === "board") {
       window.KanbanDecor.apply(evt.detail.target);
+      applyDoneState();
       initSortable();
       bindCardClicks();
       // Entrance animation only on the very first render, not on live refreshes.
