@@ -50,7 +50,7 @@
 
 body {
   margin: 0;
-  padding: 48px 16px;
+  padding: 40px;
   min-height: 100vh;
   background-color: var(--color-bg);
   background-image:
@@ -77,57 +77,11 @@ button {
   outline-offset: 2px;
 }
 
-/* ---------- window frame ---------- */
+/* ---------- page layout ---------- */
 
-.window {
+.page {
   max-width: 1480px;
   margin: 0 auto;
-  background: var(--color-window);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-2);
-  min-width: 0;
-}
-
-.window-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-line);
-}
-
-.traffic {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.traffic span {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  border: 1px solid var(--color-line);
-}
-
-.address {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  padding: 5px 16px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-muted-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.window-content {
-  padding: 28px 32px 32px;
   min-width: 0;
 }
 
@@ -590,7 +544,7 @@ pre {
   overflow-y: auto;
 }
 
-.window-content .modal {
+.page .modal {
   opacity: 1;
   transform: none;
   width: 100%;
@@ -648,9 +602,6 @@ pre {
     padding: 16px;
   }
 
-  .window-content {
-    padding: 20px 16px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

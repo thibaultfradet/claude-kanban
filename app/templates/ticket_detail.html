@@ -9,24 +9,18 @@
   <link rel="stylesheet" href="/static/app.css" />
 </head>
 <body>
-  <div class="window">
-    <div class="window-bar">
-      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
-      <div class="address">CLAUDE-KANBAN · {{ request.url.hostname }}:{{ request.url.port }}</div>
-    </div>
-    <div class="window-content">
-      <div class="page-header">
-        <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
-        <div>
-          <div class="eyebrow">Ticket #{{ ticket.id }}</div>
-          <h1>Claude <em>Kanban</em></h1>
-        </div>
+  <div class="page">
+    <div class="page-header">
+      <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
+      <div>
+        <div class="eyebrow">Ticket #{{ ticket.id }}</div>
+        <h1>Claude <em>Kanban</em></h1>
       </div>
+    </div>
 
-      <div class="modal" style="width: min(720px, 100%);">
-        <div class="modal-body" style="padding: 0;" id="standalone-ticket">
-          {% include "_ticket_fragment.html" %}
-        </div>
+    <div class="modal" style="width: min(720px, 100%);">
+      <div class="modal-body" style="padding: 0;" id="standalone-ticket">
+        {% include "_ticket_fragment.html" %}
       </div>
     </div>
   </div>
