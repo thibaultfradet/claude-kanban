@@ -5,21 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>#{{ ticket.id }} — {{ ticket.title }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/app.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/app.css?v=4" />
 </head>
 <body>
-  <div class="page">
-    <div class="page-header">
-      <a href="/" class="btn btn-icon" aria-label="Retour au board">←</a>
-      <div>
-        <div class="eyebrow">Ticket #{{ ticket.id }}</div>
-        <h1>Claude <em>Kanban</em></h1>
-      </div>
-    </div>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
-    <div class="modal" style="width: min(720px, 100%);">
-      <div class="modal-body" style="padding: 0;" id="standalone-ticket">
+  <div class="page">
+    <header class="page-header">
+      <div class="brand">
+        <a href="/" class="btn-icon" aria-label="Retour au board">←</a>
+        <div>
+          <div class="eyebrow">Ticket #{{ ticket.id }}</div>
+          <h1>Claude Kanban</h1>
+        </div>
+      </div>
+    </header>
+
+    <div class="modal modal-standalone">
+      <div class="modal-body" id="standalone-ticket">
         {% include "_ticket_fragment.html" %}
       </div>
     </div>
@@ -27,8 +31,9 @@
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=4"></script>
   <script>
+    window.KanbanDecor.apply(document.getElementById("standalone-ticket"));
     window.KanbanTicket.bind(document.getElementById("standalone-ticket"), {{ ticket.id }});
   </script>
 </body>

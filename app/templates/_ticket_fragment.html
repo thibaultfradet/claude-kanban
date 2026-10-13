@@ -1,8 +1,11 @@
-<div class="ticket-header">
+<div class="ticket-header" style="--c: var(--status-{{ ticket.status.value }}); --c-soft: var(--status-{{ ticket.status.value }}-soft)">
+  <div class="ticket-kicker">
+    <span class="badge">{{ status_labels[ticket.status] }}</span>
+    <span class="ticket-id">#{{ ticket.id }}</span>
+  </div>
   <h2 class="ticket-title">{{ ticket.title }}</h2>
-  <span class="badge" style="--badge-ink: var(--status-{{ ticket.status.value }}-ink); --badge-bg: var(--status-{{ ticket.status.value }}-bg); --badge-border: var(--status-{{ ticket.status.value }}-border)">{{ status_labels[ticket.status] }}</span>
+  <p class="ticket-meta"><span class="card-project" data-project="{{ project.name }}">{{ project.name }}</span><code>{{ project.path }}</code></p>
 </div>
-<p class="ticket-meta">{{ project.name }} · <code>{{ project.path }}</code></p>
 
 {% if ticket.status.value == "standby" %}
 <div class="section-title">Répondre à l'agent</div>
@@ -37,16 +40,17 @@
 {% endif %}
 
 <div class="section-title">Journal</div>
+{% set kind_labels = {"plan_initial": "Plan", "execution_summary": "Résumé", "question": "Question", "answer": "Réponse", "rejection": "Retour", "commit_info": "Commit", "error": "Erreur"} %}
 <div class="journal">
   {% for entry in entries %}
   <div class="entry entry-author-{{ entry.author.value }} entry-kind-{{ entry.kind.value }}">
     <div class="entry-meta">
-      <span>{{ entry.kind.value }}</span>·<span>{{ entry.author.value }}</span>·<span>{{ entry.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+      <span>{{ kind_labels.get(entry.kind.value, entry.kind.value) }}</span>·<span>{{ "toi" if entry.author.value == "user" else "agent" }}</span>·<time data-ts="{{ entry.created_at.isoformat() }}">{{ entry.created_at.strftime("%Y-%m-%d %H:%M") }}</time>
     </div>
     <pre>{{ entry.content }}</pre>
   </div>
   {% endfor %}
 </div>
 
-<div class="section-title">Logs live</div>
+<div class="section-title">Logs <span class="live-tag">live</span></div>
 <pre class="logs" data-live-logs></pre>

@@ -1,3 +1,35 @@
+// Cosmetic touches shared by board and ticket views: a stable colour per project
+// and "il y a 5 min" style timestamps.
+window.KanbanDecor = (function () {
+  function hue(name) {
+    var h = 0;
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return h % 360;
+  }
+
+  function ago(iso) {
+    var date = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + "Z");
+    var s = Math.max(0, (Date.now() - date.getTime()) / 1000);
+    if (s < 60) return "à l'instant";
+    if (s < 3600) return "il y a " + Math.floor(s / 60) + " min";
+    if (s < 86400) return "il y a " + Math.floor(s / 3600) + " h";
+    var d = Math.floor(s / 86400);
+    if (d < 7) return d === 1 ? "hier" : "il y a " + d + " jours";
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  }
+
+  function apply(root) {
+    root.querySelectorAll("[data-project]").forEach(function (el) {
+      el.style.setProperty("--h", hue(el.dataset.project));
+    });
+    root.querySelectorAll("time[data-ts]").forEach(function (el) {
+      el.textContent = ago(el.dataset.ts);
+    });
+  }
+
+  return { apply: apply };
+})();
+
 // Shared ticket-panel logic: used both by the board's modal and the standalone
 // /tickets/{id} page, so the same fragment works in either container.
 window.KanbanTicket = (function () {
@@ -101,6 +133,7 @@ window.KanbanTicket = (function () {
       })
       .then(function (html) {
         container.innerHTML = html;
+        window.KanbanDecor.apply(container);
         bind(container, ticketId);
         if (window.refreshBoardSoon) window.refreshBoardSoon();
       });
@@ -205,10 +238,26 @@ window.KanbanTicket = (function () {
 
   document.body.addEventListener("htmx:afterSwap", function (evt) {
     if (evt.detail.target && evt.detail.target.id === "board") {
+      window.KanbanDecor.apply(evt.detail.target);
       initSortable();
       bindCardClicks();
+      // Entrance animation only on the very first render, not on live refreshes.
+      setTimeout(function () {
+        document.body.classList.remove("first-load");
+      }, 1200);
     }
   });
+
+  var greeting = document.querySelector("[data-greeting]");
+  if (greeting) {
+    var hour = new Date().getHours();
+    greeting.textContent = hour < 5 ? "Bonne nuit" : hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  }
+
+  // Keep relative timestamps fresh between live refreshes.
+  setInterval(function () {
+    window.KanbanDecor.apply(document.getElementById("board"));
+  }, 60000);
 
   // Open the ticket named in ?ticket=<id> once the board has rendered at least once.
   var params = new URLSearchParams(location.search);
