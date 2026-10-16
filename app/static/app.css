@@ -1292,10 +1292,6 @@ pre {
   background: rgba(91, 91, 246, 0.1);
 }
 
-.card-top .card-changes + .card-id {
-  margin-left: 0;
-}
-
 .ticket-actions {
   display: flex;
   gap: 10px;

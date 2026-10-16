@@ -269,6 +269,15 @@ window.KanbanTicket = (function () {
   });
 
   function bindCardClicks() {
+    // The changes icon is a plain link: keep its click / Enter from opening the ticket.
+    document.querySelectorAll(".card .card-changes").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
+      link.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+      });
+    });
     document.querySelectorAll(".card[data-id]").forEach(function (card) {
       card.addEventListener("click", function () {
         openModal(card.dataset.id);

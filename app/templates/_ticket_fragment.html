@@ -5,6 +5,11 @@
   </div>
   <h2 class="ticket-title">{{ ticket.title }}</h2>
   <p class="ticket-meta"><span class="card-project" data-project="{{ project.name }}">{{ project.name }}</span><code>{{ project.path }}</code></p>
+  {% if ticket.head_sha_at_start %}
+  <div class="ticket-actions">
+    <a class="btn btn-sm" href="/tickets/{{ ticket.id }}/changes">Voir les changements</a>
+  </div>
+  {% endif %}
 </div>
 
 {% set editable = ticket.status.value in ["a_faire", "standby", "a_valider"] %}
