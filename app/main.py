@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from . import events, git_ops, runner, scheduler
+from . import changes, events, git_ops, runner, scheduler
 from .db import engine, init_db
 from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, TicketStatus
 
@@ -126,6 +126,13 @@ async def ticket_detail_page(request: Request, ticket_id: int):
     context = _ticket_context(ticket_id)
     context["request"] = request
     return templates.TemplateResponse("ticket_detail.html", context)
+
+
+@app.get("/tickets/{ticket_id}/changes")
+async def ticket_changes_page(request: Request, ticket_id: int):
+    context = _ticket_context(ticket_id)
+    context["request"] = request
+    return templates.TemplateResponse("ticket_changes.html", context)
 
 
 @app.get("/fragments/tickets/{ticket_id}")
@@ -361,6 +368,36 @@ async def ticket_push(ticket_id: int):
 
     ok, message = await git_ops.push_ticket(project_id, ticket_id)
     return {"ok": ok, "message": message}
+
+
+def _ticket_and_path(ticket_id: int):
+    with Session(engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        if ticket is None:
+            raise HTTPException(status_code=404, detail="Ticket introuvable")
+        project = session.get(Project, ticket.project_id)
+        return ticket, Path(project.path)
+
+
+@app.get("/api/tickets/{ticket_id}/changes")
+async def ticket_changes(ticket_id: int):
+    ticket, project_path = _ticket_and_path(ticket_id)
+    try:
+        return await asyncio.to_thread(changes.list_changes, ticket, project_path)
+    except changes.ChangesError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/api/tickets/{ticket_id}/changes/file")
+async def ticket_change_file(ticket_id: int, path: str):
+    ticket, project_path = _ticket_and_path(ticket_id)
+    try:
+        result = await asyncio.to_thread(changes.file_change, ticket, project_path, path)
+    except changes.ChangesError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+    if result is None:
+        raise HTTPException(status_code=404, detail="Fichier absent des changements de ce ticket")
+    return result
 
 
 @app.get("/api/tickets/{ticket_id}/stream")
