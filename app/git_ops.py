@@ -10,6 +10,7 @@ from sqlmodel import Session
 
 from . import events, runner
 from .db import engine
+from .notify import build_message, notify
 from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, TicketStatus
 
 COMMIT_SKILL_PATH = Path.home() / ".claude" / "commands" / "commit.md"
@@ -46,6 +47,7 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
         project = session.get(Project, project_id)
         ticket = session.get(Ticket, ticket_id)
         project_path = Path(project.path)
+        project_name = project.name
         head_before = ticket.head_sha_at_start or runner.git_head_sha(project_path)
 
     try:
@@ -77,6 +79,8 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
             session.commit()
             project_id_out = ticket.project_id
             status_out = ticket.status.value
+            notif = build_message("error", project_name, ticket_id, ticket.title, "échec du commit")
+        notify("error", *notif)
         await events.board_events.publish(
             {"ticket_id": ticket_id, "project_id": project_id_out, "status": status_out}
         )
@@ -84,10 +88,13 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
 
     head_after = runner.git_head_sha(project_path)
 
+    notif = None
     with Session(engine) as session:
         ticket = session.get(Ticket, ticket_id)
 
         if run.timed_out or run.is_error:
+            reason = "timeout" if run.timed_out else "erreur"
+            notif = build_message("error", project_name, ticket_id, ticket.title, f"commit : {reason}")
             ticket.error_message = (
                 "Le run de commit automatique a échoué ou dépassé le délai. "
                 "Vérifie l'état du dépôt manuellement puis réessaie."
@@ -130,6 +137,8 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
         project_id_out = ticket.project_id
         status_out = ticket.status.value
 
+    if notif:
+        notify("error", *notif)
     await events.board_events.publish(
         {"ticket_id": ticket_id, "project_id": project_id_out, "status": status_out}
     )
@@ -138,11 +147,14 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
 async def push_ticket(project_id: int, ticket_id: int) -> Tuple[bool, str]:
     with Session(engine) as session:
         project = session.get(Project, project_id)
+        ticket = session.get(Ticket, ticket_id)
         project_path = Path(project.path)
+        notif = build_message("error", project.name, ticket_id, ticket.title, "échec du push")
 
     branch_res = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], project_path)
     branch_name = branch_res.stdout.strip()
     if branch_res.returncode != 0 or not branch_name:
+        notify("error", *notif)
         return False, "Impossible de déterminer la branche git courante."
 
     has_upstream = _run_git(
@@ -154,6 +166,7 @@ async def push_ticket(project_id: int, ticket_id: int) -> Tuple[bool, str]:
         push_res = _run_git(["push", "-u", "origin", branch_name], project_path)
 
     if push_res.returncode != 0:
+        notify("error", *notif)
         return False, (push_res.stderr.strip() or "Échec du push (raison inconnue).")
 
     with Session(engine) as session:

@@ -15,6 +15,7 @@ from sqlmodel import Session, select
 
 from .db import LOGS_DIR, engine
 from .events import ticket_log_broadcaster
+from .notify import build_message, notify
 from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, TicketStatus
 
 CLAUDE_BIN = os.environ.get("KANBAN_CLAUDE_BIN", "claude")
@@ -286,7 +287,11 @@ async def _record_launch_failure(ticket_id: int, exc: Exception) -> None:
         session.commit()
         new_status = ticket.status.value
         project_id = ticket.project_id
+        notif = build_message(
+            "error", session.get(Project, project_id).name, ticket_id, ticket.title, "échec du lancement"
+        )
 
+    notify("error", *notif)
     await events.board_events.publish(
         {"ticket_id": ticket_id, "project_id": project_id, "status": new_status}
     )
@@ -304,10 +309,12 @@ async def _apply_result(ticket_id: int, run: RunResult) -> None:
             ticket.session_id = run.session_id
 
         status = None if (run.timed_out or run.is_error) else parse_kanban_status(run.final_text)
+        notif_event, notif_reason = "error", ""
 
         if status is None:
             ticket.status = TicketStatus.standby
             reason = "timeout" if run.timed_out else ("erreur" if run.is_error else "réponse illisible")
+            notif_reason = reason
             detail = run.final_text or "(aucune sortie finale)"
             session.add(
                 TicketEntry(
@@ -318,6 +325,7 @@ async def _apply_result(ticket_id: int, run: RunResult) -> None:
                 )
             )
         elif status.get("status") == "question":
+            notif_event = "standby"
             ticket.status = TicketStatus.standby
             session.add(
                 TicketEntry(
@@ -328,6 +336,7 @@ async def _apply_result(ticket_id: int, run: RunResult) -> None:
                 )
             )
         elif status.get("status") == "done":
+            notif_event = "a_valider"
             ticket.status = TicketStatus.a_valider
             session.add(
                 TicketEntry(
@@ -338,6 +347,7 @@ async def _apply_result(ticket_id: int, run: RunResult) -> None:
                 )
             )
         else:
+            notif_reason = "statut inattendu"
             ticket.status = TicketStatus.standby
             session.add(
                 TicketEntry(
@@ -355,7 +365,11 @@ async def _apply_result(ticket_id: int, run: RunResult) -> None:
         session.commit()
         new_status = ticket.status.value
         project_id = ticket.project_id
+        notif = build_message(
+            notif_event, session.get(Project, project_id).name, ticket_id, ticket.title, notif_reason
+        )
 
+    notify(notif_event, *notif)
     await events.board_events.publish(
         {"ticket_id": ticket_id, "project_id": project_id, "status": new_status}
     )
