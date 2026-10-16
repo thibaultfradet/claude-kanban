@@ -58,6 +58,8 @@ class Ticket(SQLModel, table=True):
     commit_sha: Optional[str] = None
     commit_message: Optional[str] = None
     error_message: Optional[str] = None
+    model: Optional[str] = None
+    effort: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

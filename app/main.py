@@ -19,6 +19,12 @@ from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, Ticket
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.globals.update(
+    default_model=lambda: runner.MODEL,
+    default_effort=lambda: runner.EFFORT,
+    allowed_models=runner.ALLOWED_MODELS,
+    allowed_efforts=runner.ALLOWED_EFFORTS,
+)
 
 STATUS_LABELS = {
     TicketStatus.a_faire: "À faire",
@@ -139,10 +145,22 @@ class CreateTicketBody(BaseModel):
     project_path: str
     title: str
     plan: str
+    model: Optional[str] = None
+    effort: Optional[str] = None
+
+
+def _validate_choice(value: Optional[str], allowed: tuple, label: str) -> None:
+    if value is not None and value not in allowed:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{label} invalide : « {value} ». Valeurs autorisées : {', '.join(allowed)}",
+        )
 
 
 @app.post("/api/tickets")
 async def create_ticket(body: CreateTicketBody):
+    _validate_choice(body.model, runner.ALLOWED_MODELS, "Modèle")
+    _validate_choice(body.effort, runner.ALLOWED_EFFORTS, "Effort")
     project_path = str(Path(body.project_path).expanduser().resolve())
 
     with Session(engine) as session:
@@ -153,7 +171,13 @@ async def create_ticket(body: CreateTicketBody):
             session.commit()
             session.refresh(project)
 
-        ticket = Ticket(project_id=project.id, title=body.title, status=TicketStatus.a_faire)
+        ticket = Ticket(
+            project_id=project.id,
+            title=body.title,
+            status=TicketStatus.a_faire,
+            model=body.model,
+            effort=body.effort,
+        )
         session.add(ticket)
         session.commit()
         session.refresh(ticket)
@@ -174,6 +198,56 @@ async def create_ticket(body: CreateTicketBody):
         {"ticket_id": ticket_id, "project_id": project_id, "status": TicketStatus.a_faire.value}
     )
     return {"ticket_id": ticket_id, "project_id": project_id}
+
+
+class SettingsBody(BaseModel):
+    model: Optional[str] = None
+    effort: Optional[str] = None
+
+
+EDITABLE_SETTINGS_STATUSES = (TicketStatus.a_faire, TicketStatus.standby, TicketStatus.a_valider)
+
+
+@app.patch("/api/tickets/{ticket_id}/settings")
+async def ticket_set_settings(ticket_id: int, body: SettingsBody):
+    provided = body.model_fields_set
+    if "model" in provided:
+        _validate_choice(body.model, runner.ALLOWED_MODELS, "Modèle")
+    if "effort" in provided:
+        _validate_choice(body.effort, runner.ALLOWED_EFFORTS, "Effort")
+
+    with Session(engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        if ticket is None:
+            raise HTTPException(status_code=404, detail="Ticket introuvable")
+        if ticket.status not in EDITABLE_SETTINGS_STATUSES:
+            detail = (
+                "Impossible de modifier le modèle pendant l'exécution"
+                if ticket.status == TicketStatus.en_cours
+                else "Impossible de modifier le modèle de ce ticket"
+            )
+            raise HTTPException(status_code=409, detail=detail)
+        if "model" in provided:
+            ticket.model = body.model
+        if "effort" in provided:
+            ticket.effort = body.effort
+        ticket.updated_at = datetime.utcnow()
+        session.add(ticket)
+        session.commit()
+        project_id = ticket.project_id
+        status = ticket.status
+        result = {
+            "ticket_id": ticket_id,
+            "model": ticket.model,
+            "effort": ticket.effort,
+            "effective_model": ticket.model or runner.MODEL,
+            "effective_effort": ticket.effort or runner.EFFORT,
+        }
+
+    await events.board_events.publish(
+        {"ticket_id": ticket_id, "project_id": project_id, "status": status.value}
+    )
+    return result
 
 
 class FeedbackBody(BaseModel):

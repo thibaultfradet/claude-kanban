@@ -19,9 +19,14 @@ from .notify import build_message, notify
 from .models import EntryAuthor, EntryKind, Project, Ticket, TicketEntry, TicketStatus
 
 CLAUDE_BIN = os.environ.get("KANBAN_CLAUDE_BIN", "claude")
-# Opus is the CLI default and noticeably more expensive for routine tickets; sonnet
-# is a saner default for unattended runs. Override with KANBAN_MODEL if needed.
-MODEL = os.environ.get("KANBAN_MODEL", "sonnet")
+# Defaults for ticket runs; a ticket's own model/effort (NULL = default) wins.
+MODEL = os.environ.get("KANBAN_MODEL", "opus")
+EFFORT = os.environ.get("KANBAN_EFFORT", "high")
+# The automatic commit pass never uses the ticket settings.
+COMMIT_MODEL = os.environ.get("KANBAN_COMMIT_MODEL", "sonnet")
+COMMIT_EFFORT = os.environ.get("KANBAN_COMMIT_EFFORT", "low")
+ALLOWED_MODELS = ("opus", "sonnet", "haiku", "fable")
+ALLOWED_EFFORTS = ("low", "medium", "high", "xhigh", "max")
 DEFAULT_TIMEOUT_SECONDS = int(os.environ.get("KANBAN_TICKET_TIMEOUT", "1800"))
 
 # These tools assume a human is present to answer; none is, in a headless run.
@@ -138,6 +143,8 @@ async def run_claude_headless(
     cwd: Path,
     prompt: str,
     session_flag: List[str],
+    model: Optional[str] = None,
+    effort: Optional[str] = None,
     append_system_prompt: Optional[str] = None,
     disallowed_tools: Optional[str] = None,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
@@ -165,8 +172,9 @@ async def run_claude_headless(
         "--permission-mode",
         "bypassPermissions",
     ]
-    if MODEL:
-        cmd += ["--model", MODEL]
+    # --model/--effort go before variadic flags (--disallowedTools) which would
+    # otherwise swallow them.
+    cmd += ["--model", model or MODEL, "--effort", effort or EFFORT]
     if append_system_prompt:
         cmd += ["--append-system-prompt", append_system_prompt]
     if disallowed_tools:
@@ -389,6 +397,7 @@ async def execute_ticket_start(project_id: int, ticket_id: int) -> None:
         new_session_id = str(uuid.uuid4())
         ticket.session_id = new_session_id
         project_path = Path(project.path)
+        ticket_model, ticket_effort = ticket.model, ticket.effort
         if not ticket.head_sha_at_start:
             ticket.head_sha_at_start = git_head_sha(project_path)
         session.add(ticket)
@@ -400,6 +409,8 @@ async def execute_ticket_start(project_id: int, ticket_id: int) -> None:
             cwd=project_path,
             prompt=prompt,
             session_flag=["--session-id", new_session_id],
+            model=ticket_model,
+            effort=ticket_effort,
             append_system_prompt=KANBAN_SYSTEM_PROMPT,
             disallowed_tools=DISALLOWED_TOOLS,
             log_subdir="start",
@@ -416,6 +427,7 @@ async def execute_ticket_resume(ticket_id: int, answer_text: str) -> None:
         project = session.get(Project, ticket.project_id)
         session_id = ticket.session_id
         project_path = Path(project.path)
+        ticket_model, ticket_effort = ticket.model, ticket.effort
 
     try:
         run = await run_claude_headless(
@@ -423,6 +435,8 @@ async def execute_ticket_resume(ticket_id: int, answer_text: str) -> None:
             cwd=project_path,
             prompt=answer_text,
             session_flag=["--resume", session_id],
+            model=ticket_model,
+            effort=ticket_effort,
             append_system_prompt=KANBAN_SYSTEM_PROMPT,
             disallowed_tools=DISALLOWED_TOOLS,
             log_subdir="resume",

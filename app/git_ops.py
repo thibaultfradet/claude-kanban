@@ -59,6 +59,8 @@ async def run_commit(project_id: int, ticket_id: int) -> None:
             cwd=project_path,
             prompt=prompt,
             session_flag=["--session-id", str(uuid.uuid4())],
+            model=runner.COMMIT_MODEL,
+            effort=runner.COMMIT_EFFORT,
             disallowed_tools="AskUserQuestion,EnterPlanMode,ExitPlanMode",
             log_subdir="commit",
         )
