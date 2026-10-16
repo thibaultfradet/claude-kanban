@@ -1272,3 +1272,373 @@ pre {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ---------- changes view (source control) ---------- */
+
+.card-top .card-changes {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  margin-right: -4px;
+  border-radius: 7px;
+  color: var(--muted);
+  transition: color 160ms var(--ease), background 160ms var(--ease);
+}
+
+.card-top .card-changes:hover {
+  color: var(--accent);
+  background: rgba(91, 91, 246, 0.1);
+}
+
+.card-top .card-changes + .card-id {
+  margin-left: 0;
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.changes-page {
+  --sc-add: #1a7f37;
+  --sc-del: #cf222e;
+  --sc-mod: #c27c0e;
+  --sc-ren: #2f6fdf;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.changes-page [hidden] {
+  display: none !important;
+}
+
+.changes-page.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.sc-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.sc-header .btn-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.sc-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.sc-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-range {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sc-range code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  background: rgba(22, 21, 26, 0.05);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.sc-live {
+  --dot: var(--status-en_cours);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--status-en_cours);
+}
+
+.sc-toggle {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(22, 21, 26, 0.05);
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.sc-toggle button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 550;
+  padding: 5px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.sc-toggle button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+
+.sc-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sc-sidebar {
+  width: 300px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.sc-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.sc-files {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sc-files:focus-visible {
+  outline-offset: -2px;
+}
+
+.sc-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sc-file:hover {
+  background: rgba(22, 21, 26, 0.05);
+}
+
+.sc-file.is-selected {
+  background: rgba(91, 91, 246, 0.14);
+}
+
+.sc-file-name {
+  flex-shrink: 0;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+.sc-file-D .sc-file-name {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.sc-file-dir {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sc-file-stats {
+  display: inline-flex;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.sc-add {
+  color: var(--sc-add);
+}
+
+.sc-del {
+  color: var(--sc-del);
+}
+
+.sc-file-status {
+  width: 14px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sc-file-M .sc-file-status,
+.sc-file-status.sc-file-M {
+  color: var(--sc-mod);
+}
+
+.sc-file-A .sc-file-status,
+.sc-file-status.sc-file-A {
+  color: var(--sc-add);
+}
+
+.sc-file-D .sc-file-status,
+.sc-file-status.sc-file-D {
+  color: var(--sc-del);
+}
+
+.sc-file-R .sc-file-status,
+.sc-file-status.sc-file-R {
+  color: var(--sc-ren);
+}
+
+.sc-files-empty,
+.sc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sc-files-empty {
+  padding: 36px 16px;
+}
+
+.sc-files-empty strong,
+.sc-empty strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.sc-resizer {
+  width: 5px;
+  margin: 0 -2px;
+  z-index: 1;
+  cursor: col-resize;
+  background: linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat;
+  flex-shrink: 0;
+  transition: background-size 160ms var(--ease);
+}
+
+.sc-resizer:hover,
+.is-resizing .sc-resizer {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 3px 100%;
+}
+
+.sc-diff {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.sc-diff-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sc-editor {
+  flex: 1;
+  min-height: 0;
+}
+
+.sc-empty {
+  flex: 1;
+  padding: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sc-diff {
+    background: #1e1e1e;
+  }
+
+  .sc-diff-head {
+    color: #ccc;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .sc-diff-head .sc-file-name {
+    color: #eee;
+  }
+
+  .sc-diff .sc-empty strong {
+    color: #ddd;
+  }
+}
+
+@media (max-width: 760px) {
+  .sc-range,
+  .sc-heading .ticket-id {
+    display: none;
+  }
+
+  .sc-sidebar {
+    width: 220px;
+  }
+}
