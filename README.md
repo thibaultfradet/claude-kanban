@@ -107,6 +107,33 @@ An omitted field is unchanged and `null` restores the default. The response is
 `{"ticket_id", "model", "effort", "effective_model", "effective_effort"}`. Invalid
 values return 422; editing a running, to-commit or done ticket returns 409.
 
+## Changes view
+
+`/tickets/<id>/changes` is a read-only, VS Code style "Source Control" page for one
+ticket: the changed files on the left (with `+/−` counts and an `A`/`M`/`D`/`R`
+status), a Monaco diff editor on the right (side-by-side or inline). Open it from the
+ticket panel (**Voir les changements**) or the small icon on a board card, once the
+ticket has started.
+
+The diff covers everything since the ticket started (`head_sha_at_start`):
+
+- while the ticket is in progress, stand by, to review or to commit: against the
+  current working tree (the agent's commits, staged and unstaged changes, and
+  untracked files);
+- once it's done: against `commit_sha` (or `HEAD`), so the view is frozen.
+
+While the agent is running, the page re-polls every 3 seconds (paused when the tab is
+hidden). Nothing is ever written to the repository: no index changes, no stash.
+Binary files and files over 1 MB are listed but not displayed.
+
+| Route | Returns |
+|---|---|
+| `GET /api/tickets/<id>/changes` | `{"ticket_id", "status", "base", "target", "live", "files": [{"path", "old_path", "status", "additions", "deletions"}]}`, where `target` is a sha or `"WORKTREE"` |
+| `GET /api/tickets/<id>/changes/file?path=<path>` | `{"path", "old_path", "status", "original", "modified", "binary", "too_large"}`; `path` must be one of the ticket's changed files, otherwise 404 |
+
+Git errors return 500 with the message. Monaco is loaded from the jsDelivr CDN
+(`monaco-editor@0.52.2`).
+
 ## Notifications
 
 The board sends native desktop notifications (info only, no click action) when a ticket needs you:
