@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Changements · #{{ ticket.id }} — {{ ticket.title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/app.css?v=7" />
+</head>
+<body class="changes-page">
+  <header class="sc-header">
+    <a href="/?ticket={{ ticket.id }}" class="btn-icon" aria-label="Retour au ticket" title="Retour au ticket">←</a>
+    <div class="sc-heading">
+      <span class="ticket-id">#{{ ticket.id }}</span>
+      <h1 class="sc-title" title="{{ ticket.title }}">{{ ticket.title }}</h1>
+    </div>
+    <span class="badge" data-status-badge style="--c: var(--status-{{ ticket.status.value }}); --c-soft: var(--status-{{ ticket.status.value }}-soft)">{{ status_labels[ticket.status] }}</span>
+    <span class="sc-range" data-range></span>
+    <span class="sc-live is-live" data-live hidden><span class="pulse-dot"></span>live</span>
+    <div class="sc-toggle" role="group" aria-label="Affichage du diff">
+      <button type="button" data-view="side" aria-pressed="true">Côte à côte</button>
+      <button type="button" data-view="inline" aria-pressed="false">Inline</button>
+    </div>
+  </header>
+
+  <main class="sc-main">
+    <aside class="sc-sidebar" data-sidebar>
+      <div class="sc-sidebar-head">
+        <span>Changements</span>
+        <span class="count" data-count>–</span>
+      </div>
+      <ul class="sc-files" data-files role="listbox" tabindex="0" aria-label="Fichiers modifiés"></ul>
+    </aside>
+    <div class="sc-resizer" data-resizer role="separator" aria-orientation="vertical" aria-label="Redimensionner"></div>
+    <section class="sc-diff">
+      <div class="sc-diff-head" data-file-head hidden></div>
+      <div class="sc-editor" data-editor hidden></div>
+      <div class="sc-empty" data-message>Chargement…</div>
+    </section>
+  </main>
+
+  <script>
+    window.KANBAN_CHANGES = {
+      ticketId: {{ ticket.id }},
+      statusLabels: {{ status_labels_json|safe }},
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+  <script src="/static/changes.js?v=7"></script>
+</body>
+</html>

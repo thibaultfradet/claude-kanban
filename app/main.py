@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -132,6 +133,9 @@ async def ticket_detail_page(request: Request, ticket_id: int):
 async def ticket_changes_page(request: Request, ticket_id: int):
     context = _ticket_context(ticket_id)
     context["request"] = request
+    context["status_labels_json"] = json.dumps(
+        {status.value: label for status, label in STATUS_LABELS.items()}, ensure_ascii=False
+    ).replace("<", "\\u003c")
     return templates.TemplateResponse("ticket_changes.html", context)
 
 
