@@ -26,6 +26,18 @@ Otherwise it is a **new ticket**: continue to Step 3.
 - Then write a complete, detailed plan (this is the ticket body): context, goal,
   files involved, constraints, definition of done
 
+### Propose a model and effort
+
+After writing the plan and **before** creating the ticket, propose a model/effort
+pair suited to the complexity, with a one-line justification:
+
+- small mechanical change → `sonnet` / `medium`
+- standard case → `opus` / `high` (the default)
+- large or delicate refactor → `opus` / `xhigh`
+
+Let the user accept or change it. Allowed models: `opus`, `sonnet`, `haiku`,
+`fable`. Allowed efforts: `low`, `medium`, `high`, `xhigh`, `max`.
+
 ## Step 4: Create the ticket
 
 Write the JSON payload to a temporary file (to avoid any shell escaping issues),
@@ -36,9 +48,13 @@ for example `/tmp/kanban_ticket.json`:
   "project_name": "<project name>",
   "project_path": "<absolute path>",
   "title": "<short ticket title>",
-  "plan": "<full plan in markdown>"
+  "plan": "<full plan in markdown>",
+  "model": "<opus|sonnet|haiku|fable>",
+  "effort": "<low|medium|high|xhigh|max>"
 }
 ```
+
+`model` and `effort` are optional: omit them to keep the default (opus / high).
 
 Then:
 
@@ -69,6 +85,21 @@ curl -s -X POST http://127.0.0.1:8787/api/tickets/<id>/feedback \
 
 This feedback is appended to the ticket's full history (nothing is ever overwritten)
 and the ticket goes back to "To do", to be reprocessed with all that context.
+
+## Step 6: Change the model/effort of an existing ticket
+
+If the user wants to change the model or effort of a ticket that already exists,
+ask for the ticket number and the new values, then:
+
+```bash
+curl -s -X PATCH http://127.0.0.1:8787/api/tickets/<id>/settings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "sonnet", "effort": "medium"}'
+```
+
+An omitted field is left unchanged; `null` restores the default. This is refused
+(HTTP 409) while the ticket is running, or once it is in "To commit" / "Done". The
+change applies to the next run or resume.
 
 ## Notes
 

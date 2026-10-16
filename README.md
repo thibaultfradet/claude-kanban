@@ -79,12 +79,33 @@ Set these environment variables before running `./run.sh`:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `KANBAN_MODEL` | `sonnet` | Model used for ticket runs |
+| `KANBAN_MODEL` | `opus` | Default model for ticket runs (launch and resume) |
+| `KANBAN_EFFORT` | `high` | Default effort for ticket runs |
+| `KANBAN_COMMIT_MODEL` | `sonnet` | Model for the automatic commit pass |
+| `KANBAN_COMMIT_EFFORT` | `low` | Effort for the automatic commit pass |
 | `KANBAN_TICKET_TIMEOUT` | `1800` | Max duration of a single run, in seconds |
 | `KANBAN_POLL_INTERVAL` | `20` | How often the scheduler looks for new tickets, in seconds |
 | `KANBAN_CLAUDE_BIN` | `~/.local/bin/claude` | Path to the Claude Code binary |
 | `KANBAN_NOTIFY` | `1` | Set to `0` / `false` / `no` to disable all desktop notifications |
 | `KANBAN_NOTIFY_EVENTS` | `standby,a_valider,error` | Comma-separated list of events to notify |
+
+## Model & effort per ticket
+
+Each ticket can override the Claude model (`opus`, `sonnet`, `haiku`, `fable`) and
+effort (`low`, `medium`, `high`, `xhigh`, `max`). Leaving them unset (`NULL`) uses
+`KANBAN_MODEL` / `KANBAN_EFFORT`, so changing the default also applies to existing
+tickets. Pick them in the ticket dialog (saved on change) or pass `model` / `effort`
+to `POST /api/tickets`. Cards show the effective `model · effort`.
+
+```bash
+curl -X PATCH http://127.0.0.1:8787/api/tickets/42/settings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "sonnet", "effort": null}'
+```
+
+An omitted field is unchanged and `null` restores the default. The response is
+`{"ticket_id", "model", "effort", "effective_model", "effective_effort"}`. Invalid
+values return 422; editing a running, to-commit or done ticket returns 409.
 
 ## Notifications
 
