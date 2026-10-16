@@ -83,6 +83,26 @@ Set these environment variables before running `./run.sh`:
 | `KANBAN_TICKET_TIMEOUT` | `1800` | Max duration of a single run, in seconds |
 | `KANBAN_POLL_INTERVAL` | `20` | How often the scheduler looks for new tickets, in seconds |
 | `KANBAN_CLAUDE_BIN` | `~/.local/bin/claude` | Path to the Claude Code binary |
+| `KANBAN_NOTIFY` | `1` | Set to `0` / `false` / `no` to disable all desktop notifications |
+| `KANBAN_NOTIFY_EVENTS` | `standby,a_valider,error` | Comma-separated list of events to notify |
+
+## Notifications
+
+The board sends native desktop notifications (info only, no click action) when a ticket needs you:
+
+- `standby`: the agent asked a question;
+- `a_valider`: the agent finished and the ticket is ready to review;
+- `error`: a run failed or timed out, Claude could not be launched, the auto-commit failed, or a push failed.
+
+Each one shows the project name, ticket id and title. The command used depends on the OS:
+
+| OS | Command |
+|---|---|
+| macOS | `osascript -e 'display notification ...'` |
+| Windows | `powershell` toast (`ToastText02`) |
+| Linux | `notify-send` (skipped if not installed) |
+
+On macOS the first notification may be attributed to "Script Editor": allow it in System Settings → Notifications if nothing shows up.
 
 ## ⚠️ Safety
 
