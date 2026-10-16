@@ -1213,3 +1213,62 @@ pre {
     transition: none !important;
   }
 }
+
+/* ---------- model / effort ---------- */
+
+.card-model {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(91, 91, 246, 0.12);
+}
+
+.card-model.is-default {
+  font-weight: 400;
+  color: var(--muted);
+  background: transparent;
+  padding-left: 0;
+}
+
+.card-state ~ .card-model,
+.card-model + .card-time {
+  margin-left: 8px;
+}
+
+.settings-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.settings-row .field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.settings-row select {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.settings-row select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(91, 91, 246, 0.15);
+}
+
+.settings-row select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

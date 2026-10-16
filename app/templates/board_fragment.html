@@ -52,6 +52,7 @@
         {% elif status.value == "a_committer" %}
         <div class="card-state">{{ "Commit à relire" if ticket.commit_message else "Préparation du commit…" }}</div>
         {% endif %}
+        <span class="card-model{{ '' if ticket.model or ticket.effort else ' is-default' }}" title="Modèle · effort{{ '' if ticket.model or ticket.effort else ' (défaut)' }}">{{ ticket.model or default_model() }} · {{ ticket.effort or default_effort() }}</span>
         <time class="card-time" data-ts="{{ ticket.updated_at.isoformat() }}"></time>
       </li>
       {% endfor %}

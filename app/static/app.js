@@ -100,6 +100,28 @@ window.KanbanTicket = (function () {
       });
     }
 
+    container.querySelectorAll("[data-setting]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var body = {};
+        body[sel.dataset.setting] = sel.value || null;
+        fetch("/api/tickets/" + ticketId + "/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json().then(function (data) {
+              if (!r.ok) throw new Error(data.detail || "request failed");
+              toast("Réglage enregistré : " + data.effective_model + " · " + data.effective_effort, "success");
+            });
+          })
+          .catch(function (err) {
+            toast(err.message || "Échec de l'enregistrement.", "error");
+            load(container, ticketId);
+          });
+      });
+    });
+
     var pushBtn = container.querySelector("[data-push-btn]");
     if (pushBtn) {
       pushBtn.addEventListener("click", function () {

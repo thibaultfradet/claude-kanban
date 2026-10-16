@@ -7,6 +7,24 @@
   <p class="ticket-meta"><span class="card-project" data-project="{{ project.name }}">{{ project.name }}</span><code>{{ project.path }}</code></p>
 </div>
 
+{% set editable = ticket.status.value in ["a_faire", "standby", "a_valider"] %}
+<div class="settings-row" data-settings-form>
+  <div class="field">
+    <label for="setting-model-{{ ticket.id }}">Modèle</label>
+    <select id="setting-model-{{ ticket.id }}" name="model" data-setting="model"{% if not editable %} disabled title="Modification impossible dans ce statut"{% endif %}>
+      <option value=""{{ " selected" if not ticket.model else "" }}>Défaut ({{ default_model() }})</option>
+      {% for m in allowed_models %}<option value="{{ m }}"{{ " selected" if ticket.model == m else "" }}>{{ m }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="setting-effort-{{ ticket.id }}">Effort</label>
+    <select id="setting-effort-{{ ticket.id }}" name="effort" data-setting="effort"{% if not editable %} disabled title="Modification impossible dans ce statut"{% endif %}>
+      <option value=""{{ " selected" if not ticket.effort else "" }}>Défaut ({{ default_effort() }})</option>
+      {% for e in allowed_efforts %}<option value="{{ e }}"{{ " selected" if ticket.effort == e else "" }}>{{ e }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
+
 {% if ticket.status.value == "standby" %}
 <div class="section-title">Répondre à l'agent</div>
 <form data-answer-form>
