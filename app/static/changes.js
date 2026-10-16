@@ -152,6 +152,7 @@
   var STATUS_TITLES = { A: "Ajouté", M: "Modifié", D: "Supprimé", R: "Renommé" };
 
   function renderList() {
+    var scrollTop = els.files.scrollTop;
     els.count.textContent = String(state.files.length);
     els.files.innerHTML = "";
     state.files.forEach(function (file) {
@@ -197,6 +198,7 @@
       });
       els.files.appendChild(li);
     });
+    els.files.scrollTop = scrollTop;
   }
 
   function renderListEmpty(text, sub) {
